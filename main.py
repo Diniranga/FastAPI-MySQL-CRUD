@@ -39,18 +39,32 @@ async def create_post(post: PostBase, db: db_dependency):
 
 
 @app.get('/posts/{post_id}', status_code=status.HTTP_200_OK)
-async def read_user(post_id: int, db: db_dependency):
+async def read_post(post_id: int, db: db_dependency):
     post = db.query(models.Post).filter(models.Post.id == post_id).first()
     if post is None:
         raise HTTPException(status_code=404, detail="Post Not Found")
     return post
 
 
+@app.put("/posts/{post_id}", status_code=status.HTTP_200_OK)
+async def update_post(post_id: int, updated_post: PostBase, db: db_dependency):
+    db_post = db.query(models.Post).filter(models.Post.id == post_id).first()
+    if db_post is None:
+        raise HTTPException(status_code=404, detail="Post Not Found")
+
+    # Update the post attributes
+    for field, value in updated_post.dict().items():
+        setattr(db_post, field, value)
+
+    db.commit()
+    return db_post
+
+
 @app.delete("/posts/{post_id}", status_code=status.HTTP_200_OK)
 async def delete_post(post_id: int, db: db_dependency):
     db_post = db.query(models.Post).filter(models.Post.id == post_id).first()
     if db_post is None:
-        raise HTTPException(status_code=404, detail="Post is not Found")
+        raise HTTPException(status_code=404, detail="Post Not Found")
     db.delete(db_post)
     db.commit()
 
@@ -68,3 +82,27 @@ async def read_user(user_id: int, db: db_dependency):
     if user is None:
         raise HTTPException(status_code=404, detail="User Not Found")
     return user
+
+
+@app.put("/users/{user_id}", status_code=status.HTTP_200_OK)
+async def update_user(user_id: int, updated_user: UserBase, db: db_dependency):
+    db_user = db.query(models.User).filter(models.User.id == user_id).first()
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="User Not Found")
+
+    # Update the user attributes
+    for field, value in updated_user.dict().items():
+        setattr(db_user, field, value)
+
+    db.commit()
+    return db_user
+
+
+@app.delete("/users/{user_id}", status_code=status.HTTP_200_OK)
+async def delete_user(user_id: int, db: db_dependency):
+    db_user = db.query(models.User).filter(models.User.id == user_id).first()
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="User Not Found")
+    db.delete(db_user)
+    db.commit()
+    return {"message": "User deleted successfully"}
